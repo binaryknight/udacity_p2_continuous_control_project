@@ -1,40 +1,54 @@
 import numpy as np
 import random
 import copy
+import pdb
 from collections import namedtuple, deque
 
-from model import Actor, Critic
+from src.model import Actor, Critic
 
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
 BUFFER_SIZE = int(1e6)  # replay buffer size
-BATCH_SIZE = 128        # minibatch size
+BATCH_SIZE = 1024       # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-4         # learning rate of the actor 
 LR_CRITIC = 3e-4        # learning rate of the critic
 WEIGHT_DECAY = 0.0001   # L2 weight decay
+UPDATE_EVERY = 10
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 class Agent():
     """Interacts with and learns from the environment."""
-    
-    def __init__(self, state_size, action_size, random_seed):
+
+    def __init__(self,
+                 state_size,
+                 action_size,
+                 random_seed,
+                 actor_local_load_filename=None,
+                 actor_target_load_filename=None,
+                 critic_local_load_filename=None,
+                 critic_target_load_filename=None):
         """Initialize an Agent object.
-        
+
         Params
         ======
             state_size (int): dimension of each state
             action_size (int): dimension of each action
             random_seed (int): random seed
+            actor_local_load_filename   : if given, the initial weights of the local  NN
+            critic_local_load_filename  : if given, the initial weights if the target NN
+            actor_target_load_filename  : if given, the initial weights of the local  NN
+            critic_target_load_filename : if given, the initial weights if the target NN
         """
         self.state_size = state_size
         self.action_size = action_size
         self.seed = random.seed(random_seed)
-
+             
         # Actor Network (w/ Target Network)
         self.actor_local = Actor(state_size, action_size, random_seed).to(device)
         self.actor_target = Actor(state_size, action_size, random_seed).to(device)
@@ -43,27 +57,29 @@ class Agent():
         # Critic Network (w/ Target Network)
         self.critic_local = Critic(state_size, action_size, random_seed).to(device)
         self.critic_target = Critic(state_size, action_size, random_seed).to(device)
-        self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
+        self.critic_optimizer = optim.Adam(self.critic_local.parameters(),
+                                           lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
 
         # Noise process
         self.noise = OUNoise(action_size, random_seed)
 
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
-    
+        self.t_step = 0
+
     def step(self, state, action, reward, next_state, done):
         """Save experience in replay memory, and use random sample from buffer to learn."""
         # Save experience / reward
         self.memory.add(state, action, reward, next_state, done)
-
         # Learn, if enough samples are available in memory
-        if len(self.memory) > BATCH_SIZE:
+        self.t_step = (self.t_step + 1) % UPDATE_EVERY
+        if self.t_step == 0 and len(self.memory) > BATCH_SIZE:
             experiences = self.memory.sample()
             self.learn(experiences, GAMMA)
 
     def act(self, state, add_noise=True):
         """Returns actions for given state as per current policy."""
-        state = torch.from_numpy(state).float().to(device)
+        state = torch.from_numpy(state).float().to(device).unsqueeze(0)
         self.actor_local.eval()
         with torch.no_grad():
             action = self.actor_local(state).cpu().data.numpy()
@@ -81,7 +97,6 @@ class Agent():
         where:
             actor_target(state) -> action
             critic_target(state, action) -> Q-value
-
         Params
         ======
             experiences (Tuple[torch.Tensor]): tuple of (s, a, r, s', done) tuples 
@@ -101,6 +116,7 @@ class Agent():
         # Minimize the loss
         self.critic_optimizer.zero_grad()
         critic_loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.critic_local.parameters(), 1)
         self.critic_optimizer.step()
 
         # ---------------------------- update actor ---------------------------- #
@@ -128,6 +144,39 @@ class Agent():
         """
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
             target_param.data.copy_(tau*local_param.data + (1.0-tau)*target_param.data)
+
+    def save(self,
+             actor_local_save_filename,
+             actor_target_save_filename,
+             critic_local_save_filename,
+             critic_target_save_filename):
+        torch.save(self.actor_local.state_dict(),
+                   actor_local_save_filename)
+        torch.save(self.actor_target.state_dict(),
+                   actor_target_save_filename)
+        torch.save(self.critic_local.state_dict(),
+                   critic_local_save_filename)
+        torch.save(self.critic_target.state_dict(),
+                   critic_target_save_filename)
+
+    def load(self,
+             actor_local_load_filename,
+             actor_target_load_filename=None,
+             critic_local_load_filename=None,
+             critic_target_load_filename=None):
+        if actor_local_load_filename is not None:
+            self.actor_local.load_state_dict(
+                torch.load(actor_local_load_filename))
+        if actor_target_load_filename is not None:
+            self.actor_target.load_state_dict(
+                torch.load(actor_target_load_filename))
+        if critic_local_load_filename is not None:
+            self.critic_local.load_state_dict(
+                torch.load(critic_local_load_filename))
+        if critic_target_load_filename is not None:
+            self.critic_target.load_state_dict(
+                torch.load(critic_target_load_filename))
+
 
 class OUNoise:
     """Ornstein-Uhlenbeck process."""
