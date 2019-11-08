@@ -12,19 +12,19 @@ from unityagents import UnityEnvironment
 # Get the DDPG agent
 from src.ddpg_agent import Agent
 
-def train( env,
-           min_performance=30,
-           num_episodes=10,
-           window_size=100,
-           actor_local_save_filename='actor_local_weights.pt',
-           actor_target_save_filename='actor_target_weights.pt',
-           critic_local_save_filename='critic_local_weights.pt',
-           critic_target_save_filename='critic_target_weights.pt',
-           actor_local_load_filename=None,
-           critic_local_load_filename=None,
-           actor_target_load_filename=None,
-           critic_target_load_filename=None,
-           random_seed=12345):
+def train(env,
+          min_performance=30,
+          num_episodes=10,
+          window_size=100,
+          actor_local_save_filename='actor_local_weights.pt',
+          actor_target_save_filename='actor_target_weights.pt',
+          critic_local_save_filename='critic_local_weights.pt',
+          critic_target_save_filename='critic_target_weights.pt',
+          actor_local_load_filename=None,
+          critic_local_load_filename=None,
+          actor_target_load_filename=None,
+          critic_target_load_filename=None,
+          random_seed=12345):
 
     """Train an agent using DDPG Agent.
 
@@ -56,19 +56,20 @@ def train( env,
     env_info = env.reset(train_mode=True)[brain_name]
 
     # number of agents in the environment
-    print('Number of agents:', len(env_info.agents))
+    num_agents = len(env_info.agents)
+    print('Number of agents:', num_agents)
     # number of actions
     action_size = brain.vector_action_space_size
     print('Number of actions:', action_size)
-    state = env_info.vector_observations[0]
-    state_size = state.shape[0]
+    states = env_info.vector_observations
+    state_size = states.shape[1]
     print('States have length:', state_size)
 
     print('There are {} agents. Each observes a state with length: {}'.
-          format(len(env_info.agents), state_size))
-    print('The state for the first agent looks like:', state)
+          format(num_agents, state_size))
+    print('The state for the first agent looks like:', states)
 
-    # Create the agent 
+    # Create the agent
     agent = Agent(state_size, action_size, random_seed)
 
     # Load weights if they exist
@@ -84,35 +85,37 @@ def train( env,
     scores_window = deque(maxlen=window_size)
     for e in range(num_episodes):
         # initialize the score
-        score = 0
+        score = np.zeros(num_agents)
         # reset the environment
         env_info = env.reset(train_mode=True)[brain_name]
         # get the current state
-        state = env_info.vector_observations[0]
-        while True:
+        states = env_info.vector_observations
+        #while True:
+        for t in range(1000):
+            print("""time: {}""".format(str(t)), end='\r')
             # select an action
-            action = agent.act(state, add_noise=True)
+            action = agent.act(states, add_noise=True)
             # send the action to the environment
             env_info = env.step(action)[brain_name]
             # get the next state
-            next_state = env_info.vector_observations[0]
+            next_states = env_info.vector_observations
             # get the reward
-            reward = env_info.rewards[0]
+            rewards = env_info.rewards
             # see if episode has finished
-            done = env_info.local_done[0]
+            dones = env_info.local_done
 
             # update the replay buffer and train if necessary
-            agent.step(state,
+            agent.step(states,
                        action,
-                       reward,
-                       next_state,
-                       done)
+                       rewards,
+                       next_states,
+                       dones)
             # update the score
-            score += reward
+            score += rewards
             # roll over the state to next time step
-            state = next_state
+            states = next_states
             # exit loop if episode finished
-            if done:
+            if np.any(dones):
                 break
 
         # Append the scores
@@ -121,10 +124,10 @@ def train( env,
         # Check if the minimum threshold for the reward has been achieved
         avg_score = np.mean(scores_window)
         avg_scores.append(avg_score)
-        if (e+1) % 10 == 1:
-            print("""Episode: {} Score:  {:.2f} average score: {:.2f}  over episodes: {}""".format((e+1), score, avg_score, min((e+1), window_size)))
+        if (e+1) % 1 == 0:
+            print("""Episode: {} Score:  {:.2f} average score: {:.2f}  over episodes: {}""".format((e+1), float(score), float(avg_score), min((e+1), window_size)))
         if avg_score >= min_performance:
-            print('\nEnvironment solved in {:d} episodes! \tAverage Score: {:.2f}'.format((e+1), np.mean(scores_window)))
+            print('\nEnvironment solved in {:d} episodes! \tAverage Score: {:.2f}'.format((e+1), float(avg_score)))
             break
 
     agent.save(actor_local_save_filename,
@@ -153,10 +156,11 @@ def run(env,
     # Load the
     env_info = env.reset(train_mode=False)[brain_name]
     # number of actions
+    num_agents = len(env_info.agents)
     action_size = brain.vector_action_space_size
     # Get the state space information
-    state = env_info.vector_observations[0]
-    state_size = len(state)
+    states = env_info.vector_observations
+    state_size = states.shape[1]
     # Create the agent with the trained weights
     agent = Agent(state_size, action_size, 12345)
     agent.load(actor_local_load_filename)
@@ -165,31 +169,31 @@ def run(env,
     scores = []
     for e in range(num_episodes):
         # initialize the score
-        score = 0
+        score = np.zeros(num_agents)
         # reset the environment
         env_info = env.reset(train_mode=False)[brain_name]
         # get the current state
-        state = env_info.vector_observations[0]
+        states = env_info.vector_observations
         while True:
             # select an action
-            action = agent.act(state, add_noise=False)
+            action = agent.act(states, add_noise=False)
             # send the action to the environment
             env_info = env.step(action)[brain_name]
             # get the next state
-            next_state = env_info.vector_observations[0]
+            next_states = env_info.vector_observations
             # get the reward
-            reward = env_info.rewards[0]
+            rewards = env_info.rewards
             # see if episode has finished
-            done = env_info.local_done[0]
+            dones = env_info.local_done
             
             # Update the replay buffer and train if necessary
-            agent.step(state, action, reward, next_state, done)
+            agent.step(states, action, rewards, next_states, dones)
             # update the score
-            score += reward
+            score += rewards
             # roll over the state to next time step
-            state = next_state
+            states = next_states
             # exit loop if episode finished
-            if done:
+            if np.any(dones):
                 break
 
         ## Append the scores

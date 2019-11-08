@@ -11,16 +11,17 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 BUFFER_SIZE = int(1e6)  # replay buffer size
-BATCH_SIZE = 1024       # minibatch size
+BATCH_SIZE = 2048       # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-4         # learning rate of the actor 
-LR_CRITIC = 3e-4        # learning rate of the critic
-WEIGHT_DECAY = 0.0001   # L2 weight decay
+LR_CRITIC = 1e-4        # learning rate of the critic
+WEIGHT_DECAY = 0.0      # L2 weight decay
 UPDATE_EVERY = 10
-
+NUM_UPDATES = 1
+EPSILON = 1.0
+EPSILON_DECAY = 0.9999
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 class Agent():
     """Interacts with and learns from the environment."""
@@ -66,6 +67,8 @@ class Agent():
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
         self.t_step = 0
+        self.epsilon = EPSILON
+        self.epsilon_decay = EPSILON_DECAY
 
     def step(self, state, action, reward, next_state, done):
         """Save experience in replay memory, and use random sample from buffer to learn."""
@@ -74,18 +77,20 @@ class Agent():
         # Learn, if enough samples are available in memory
         self.t_step = (self.t_step + 1) % UPDATE_EVERY
         if self.t_step == 0 and len(self.memory) > BATCH_SIZE:
-            experiences = self.memory.sample()
-            self.learn(experiences, GAMMA)
+            for _ in range(NUM_UPDATES):
+                experiences = self.memory.sample()
+                self.learn(experiences, GAMMA)
 
     def act(self, state, add_noise=True):
         """Returns actions for given state as per current policy."""
-        state = torch.from_numpy(state).float().to(device).unsqueeze(0)
+        state = torch.from_numpy(state).float().to(device)
         self.actor_local.eval()
         with torch.no_grad():
             action = self.actor_local(state).cpu().data.numpy()
         self.actor_local.train()
         if add_noise:
-            action += self.noise.sample()
+            self.epsilon = self.epsilon_decay * self.epsilon
+            action += (self.epsilon * self.noise.sample())
         return np.clip(action, -1, 1)
 
     def reset(self):
