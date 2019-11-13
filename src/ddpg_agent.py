@@ -11,14 +11,14 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 BUFFER_SIZE = int(1e6)  # replay buffer size
-BATCH_SIZE = 2048       # minibatch size
+BATCH_SIZE = 128       # minibatch size
 GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
-LR_ACTOR = 1e-4         # learning rate of the actor 
-LR_CRITIC = 1e-4        # learning rate of the critic
+LR_ACTOR = 5e-5         # learning rate of the actor 
+LR_CRITIC = 5e-5        # learning rate of the critic
 WEIGHT_DECAY = 0.0      # L2 weight decay
-UPDATE_EVERY = 10
-NUM_UPDATES = 1
+UPDATE_EVERY = 5
+NUM_UPDATES = 10
 EPSILON = 1.0
 EPSILON_DECAY = 0.9999
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -220,12 +220,12 @@ class ReplayBuffer:
         self.batch_size = batch_size
         self.experience = namedtuple("Experience", field_names=["state", "action", "reward", "next_state", "done"])
         self.seed = random.seed(seed)
-    
+
     def add(self, state, action, reward, next_state, done):
         """Add a new experience to memory."""
         e = self.experience(state, action, reward, next_state, done)
         self.memory.append(e)
-    
+
     def sample(self):
         """Randomly sample a batch of experiences from memory."""
         experiences = random.sample(self.memory, k=self.batch_size)
