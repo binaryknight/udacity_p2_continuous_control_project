@@ -1,7 +1,3 @@
-[//]: # (Image References)
-
-[image1]: https://user-images.githubusercontent.com/10624937/43851024-320ba930-9aff-11e8-8493-ee547c6af349.gif "Trained Agent"
-
 
 # Project 2: Continuous Control
 
@@ -15,8 +11,8 @@ A reward of +0.1 is provided for each time step that the agent's hand is in the 
 #### States
 The observation space consists of 33 variables corresponding to position, rotation, velocity, and angular velocities of the arm. 
 
-#### Action
-Each action is a vector with four numbers, corresponding to torque applicable to two joints. Every entry in the action vector should be a number between -1 and 1.
+#### Actions
+Each action is a vector with four numbers, corresponding to torque applicable to two joints. Every entry in the action vector is a number between -1 and 1.
 
 #### Number of Arms in the Environment 
 
@@ -28,7 +24,7 @@ The code in this repo solves two separate versions of the Unity environment.
 
  Agents must get an average score of +30 (over 100 consecutive episodes, and over all agents). 
  - Specifically, after each episode, the rewards that each agent received (without discounting) is added up, to get a score for each agent. Then average of these scores is taken. 
-- This yields an **average score** for each episode (where the average is over all 20 agents).
+- This yields an **average score** for each episode (where the average is over all agents).
 - The environment is considered solved, when the average (over 100 episodes) of those average scores is greater than 30. 
 
 ### Getting Started
@@ -49,8 +45,9 @@ The code in this repo solves two separate versions of the Unity environment.
     
     (_For Windows users_) Check out [this link](https://support.microsoft.com/en-us/help/827218/how-to-determine-whether-a-computer-is-running-a-32-bit-version-or-64) if you need help with determining if your computer is running a 32-bit version or 64-bit version of the Windows operating system.
 
-2. Place the file in the directory where you hae cloned this project, and unzip (or decompress) the file.
-3. Name the directory where the 20 agent version is unzipped (decompressed) as Reacher20.app and the one agent version as Reacher.app 
+2. Place the file in the directory where you have cloned this project, and unzip (or decompress) the file.
+3. Name the directory where the 20-agent version is unzipped (decompressed) as Reacher20.app and the one agent version as Reacher.app 
+4. The repo contains the zip files for the Mac OSX operating system.
 
 ### Instructions
 Run the `Continuous_Control_Submission.ipynb` notebook to get started.  
