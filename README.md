@@ -52,6 +52,9 @@ The code in this repo solves two separate versions of the Unity environment.
 ### Instructions
 Run the `Continuous_Control_Submission.ipynb` notebook to get started.  
 
+### Implementation Details
+The details can be found in `Report.ipynb` file
+
 
 
 
