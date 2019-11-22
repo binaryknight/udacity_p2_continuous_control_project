@@ -24,7 +24,7 @@ The code in this repo solves two separate versions of the Unity environment.
 
  Agents must get an average score of +30 (over 100 consecutive episodes, and over all agents). 
  - Specifically, after each episode, the rewards that each agent received (without discounting) is added up, to get a score for each agent. Then average of these scores is taken. 
-- This yields an **average score** for each episode (where the average is over all agents).
+- This yields a moving  **average score** for each episode (where the average is over all agents).
 - The environment is considered solved, when the average (over 100 episodes) of those average scores is greater than 30. 
 
 ### Getting Started
@@ -53,7 +53,7 @@ The code in this repo solves two separate versions of the Unity environment.
 Run the `Continuous_Control_Submission.ipynb` notebook to get started.  
 
 ### Implementation Details
-The details can be found in `Report.ipynb` file
+The details can be found in `REPORT.ipynb` file
 
 
 
