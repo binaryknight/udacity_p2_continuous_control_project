@@ -27,8 +27,34 @@ The code in this repo solves two separate versions of the Unity environment.
 - This yields a moving  **average score** for each episode (where the average is over all agents).
 - The environment is considered solved, when the average (over 100 episodes) of those average scores is greater than 30. 
 
-### Getting Started
+### Setting Up the Python Environment
+Follow the instructions below to set up your python environment to run the code in this repository, 
+1. Create (and activate) a new environment with Python 3.6.
+	- __Linux__ or __Mac__: 
+	```bash
+	conda create --name drlnd python=3.6
+	source activate drlnd
+	```
+	- __Windows__: 
+	```bash
+	conda create --name drlnd python=3.6 
+	activate drlnd
+	```
+	
+2. Clone the repository [DRLND](https://github.com/udacity/deep-reinforcement-learning), and navigate to the `python/` folder.  Then, install several dependencies.
+```bash
+git clone https://github.com/udacity/deep-reinforcement-learning.git
+cd deep-reinforcement-learning/python
+pip install .
+```
+4. Create an [IPython kernel](http://ipython.readthedocs.io/en/stable/install/kernel_install.html) for the `drlnd` environment.
+```bash
+python -m ipykernel install --user --name drlnd --display-name "drlnd"
+```
+5. Before running code in a notebook, change the kernel to match the `drlnd` environment by using the drop-down `Kernel` menu.
 
+
+### Setting Up the Unity Environment
 1. Download the environment from one of the links below.  You need only select the environment that matches your operating system:
 
     - **_Version 1: One (1) Agent_**
