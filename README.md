@@ -76,6 +76,13 @@ Follow the instructions below to set up your python environment to run the code 
 
 ### Instructions
 Run the `Continuous_Control_Submission.ipynb` notebook to get started.  
+1. Navigate to the root directory of this repo. 
+2. Start the Jupyter Notebook in the activated `drlnd` conda environment
+   - ```bash
+     jupyter notebook
+     ```
+3. Open  `Continuous_Control_Submission.ipynb` in the Jupyter file browser  
+  
 
 ### Implementation Details
 The details can be found in `REPORT.ipynb` file
